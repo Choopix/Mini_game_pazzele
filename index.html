@@ -1,0 +1,1115 @@
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Пазл-Мастер | Головоломка</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#6366f1',
+                        accent: '#ec4899',
+                        dark: '#0f172a',
+                        card: '#1e293b'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        * {
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: none;
+        }
+        body {
+            background: radial-gradient(circle at 50% 50%, #1e1b4b 0%, #0f172a 100%);
+            min-height: 100vh;
+            overflow: hidden;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .glass-btn {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .glass-btn:hover {
+            background: rgba(255, 255, 255, 0.18);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+        }
+        .glass-btn:active {
+            transform: translateY(0);
+        }
+        .custom-scroll::-webkit-scrollbar {
+            height: 6px;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+        }
+        @keyframes pulse-glow {
+            0%, 100% { opacity: 0.4; }
+            50% { opacity: 0.8; }
+        }
+        .glow-effect {
+            animation: pulse-glow 3s infinite ease-in-out;
+        }
+    </style>
+</head>
+<body class="text-white flex flex-col h-screen w-screen overflow-hidden">
+
+    <!-- Top Header / Bar -->
+    <header class="w-full px-4 py-2.5 glass-panel z-20 flex justify-between items-center shrink-0 border-b border-white/10">
+        <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-500 to-pink-500 flex items-center justify-center shadow-lg shadow-indigo-500/30">
+                <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z"/>
+                </svg>
+            </div>
+            <div>
+                <h1 class="text-base font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-300 via-pink-300 to-white">Пазл-Мастер</h1>
+                <p class="text-xs text-indigo-200/60 hidden sm:block">Собери картинку по кусочкам</p>
+            </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="flex items-center gap-4 text-xs sm:text-sm">
+            <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10">
+                <svg class="w-4 h-4 text-pink-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <span id="timerText" class="font-mono font-medium">00:00</span>
+            </div>
+
+            <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10">
+                <svg class="w-4 h-4 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11"/>
+                </svg>
+                <span>Ходы: <strong id="movesText" class="font-mono text-white">0</strong></span>
+            </div>
+
+            <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10">
+                <span class="text-indigo-300">Готово:</span>
+                <strong id="progressText" class="font-mono text-pink-400">0/9</strong>
+            </div>
+        </div>
+
+        <!-- Controls / Buttons -->
+        <div class="flex items-center gap-2">
+            <!-- Hint Toggle -->
+            <button id="btnHint" title="Показать подсказку" class="glass-btn p-2 rounded-lg text-indigo-200 hover:text-white flex items-center justify-center">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                </svg>
+            </button>
+
+            <!-- Sound Toggle -->
+            <button id="btnSound" title="Звук" class="glass-btn p-2 rounded-lg text-indigo-200 hover:text-white flex items-center justify-center">
+                <svg id="soundIconOn" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/>
+                </svg>
+                <svg id="soundIconOff" class="w-5 h-5 hidden text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"/>
+                </svg>
+            </button>
+
+            <!-- Menu / Settings -->
+            <button id="btnSettings" title="Настройки и выбор картинок" class="glass-btn px-3 py-2 rounded-lg text-indigo-200 hover:text-white flex items-center gap-1.5 font-medium text-xs sm:text-sm">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+                <span class="hidden sm:inline">Меню</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Canvas Area (Interactive Game Viewport) -->
+    <main class="relative flex-1 w-full h-full overflow-hidden bg-slate-950/40">
+        <canvas id="gameCanvas" class="w-full h-full block cursor-grab active:cursor-grabbing"></canvas>
+
+        <!-- Floating Quick Action Bar -->
+        <div class="absolute bottom-4 left-1/2 -translate-x-1/2 glass-panel px-4 py-2 rounded-2xl flex items-center gap-3 shadow-2xl z-10">
+            <button id="btnRestart" class="glass-btn px-3 py-1.5 rounded-xl text-xs font-semibold text-indigo-200 flex items-center gap-1.5">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                </svg>
+                Перемешать
+            </button>
+            <div class="h-4 w-[1px] bg-white/20"></div>
+            <div class="flex items-center gap-1">
+                <button data-grid="3" class="btn-diff px-2.5 py-1 rounded-lg text-xs font-bold transition bg-indigo-600 text-white">3×3</button>
+                <button data-grid="4" class="btn-diff px-2.5 py-1 rounded-lg text-xs font-bold transition text-indigo-200 hover:bg-white/10">4×4</button>
+                <button data-grid="5" class="btn-diff px-2.5 py-1 rounded-lg text-xs font-bold transition text-indigo-200 hover:bg-white/10">5×5</button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Settings & Image Selector Modal -->
+    <div id="modalSettings" class="fixed inset-0 bg-black/70 backdrop-blur-md z-30 flex items-center justify-center p-4 opacity-0 pointer-events-none transition-opacity duration-300">
+        <div class="glass-panel w-full max-w-lg rounded-3xl p-6 shadow-2xl border border-white/20 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-5">
+                <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                    <svg class="w-6 h-6 text-pink-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                    Выбор картинки
+                </h2>
+                <button id="btnCloseSettings" class="w-8 h-8 rounded-full glass-btn flex items-center justify-center text-slate-400 hover:text-white">✕</button>
+            </div>
+
+            <!-- Image Presets Grid -->
+            <div class="grid grid-cols-2 gap-3 mb-6" id="presetsContainer">
+                <!-- Injected via JS -->
+            </div>
+
+            <!-- Custom Upload -->
+            <div class="mb-6">
+                <label class="block text-xs font-semibold text-indigo-300 mb-2 uppercase tracking-wider">Своя картинка</label>
+                <label class="flex flex-col items-center justify-center border-2 border-dashed border-indigo-400/40 hover:border-pink-400/80 rounded-2xl p-4 cursor-pointer transition bg-indigo-950/30 group">
+                    <svg class="w-8 h-8 text-indigo-300 group-hover:text-pink-400 mb-2 transition" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                    </svg>
+                    <span class="text-xs text-slate-300 font-medium">Нажмите, чтобы загрузить файл</span>
+                    <input type="file" id="fileInput" accept="image/*" class="hidden">
+                </label>
+            </div>
+
+            <button id="btnStartGameModal" class="w-full py-3 bg-gradient-to-r from-indigo-500 to-pink-500 hover:from-indigo-600 hover:to-pink-600 text-white font-bold rounded-xl shadow-lg shadow-pink-500/25 transition">
+                Продолжить игру
+            </button>
+        </div>
+    </div>
+
+    <!-- Win Modal Screen -->
+    <div id="modalWin" class="fixed inset-0 bg-black/75 backdrop-blur-md z-40 flex items-center justify-center p-4 opacity-0 pointer-events-none transition-opacity duration-300">
+        <div class="glass-panel w-full max-w-sm rounded-3xl p-6 shadow-2xl border border-pink-500/30 text-center transform scale-90 transition-transform duration-300" id="winCard">
+            <div class="w-20 h-20 mx-auto rounded-full bg-gradient-to-tr from-yellow-400 via-pink-500 to-indigo-500 flex items-center justify-center shadow-lg shadow-pink-500/50 mb-4 animate-bounce">
+                <span class="text-4xl">🏆</span>
+            </div>
+            <h2 class="text-2xl font-black bg-clip-text text-transparent bg-gradient-to-r from-yellow-300 via-pink-300 to-white mb-1">
+                Великолепно!
+            </h2>
+            <p class="text-xs text-indigo-200 mb-6">Вы успешно собрали весь пазл!</p>
+
+            <div class="grid grid-cols-2 gap-3 mb-6 bg-white/5 p-3 rounded-2xl border border-white/10">
+                <div>
+                    <span class="text-xs text-indigo-300 block">Время</span>
+                    <strong id="winTime" class="text-lg font-bold text-white font-mono">01:23</strong>
+                </div>
+                <div>
+                    <span class="text-xs text-indigo-300 block">Ходы</span>
+                    <strong id="winMoves" class="text-lg font-bold text-pink-400 font-mono">24</strong>
+                </div>
+            </div>
+
+            <div class="flex gap-2">
+                <button id="btnWinNext" class="flex-1 py-3 bg-gradient-to-r from-indigo-500 to-pink-500 hover:from-indigo-600 hover:to-pink-600 font-bold rounded-xl shadow-lg shadow-pink-500/30 transition text-sm">
+                    Следующий уровень
+                </button>
+                <button id="btnWinReplay" class="px-4 py-3 glass-btn font-bold rounded-xl text-sm">
+                    🔄
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        /* --- Audio Synthesizer (Web Audio API) --- */
+        class SoundFX {
+            constructor() {
+                this.ctx = null;
+                this.enabled = true;
+            }
+            init() {
+                if (!this.ctx) {
+                    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                    this.ctx = new AudioCtx();
+                }
+                if (this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            }
+            playPick() {
+                if (!this.enabled) return;
+                this.init();
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(260, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(440, this.ctx.currentTime + 0.08);
+                gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.08);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.08);
+            }
+            playSnap() {
+                if (!this.enabled) return;
+                this.init();
+                const now = this.ctx.currentTime;
+                // Rich double chime
+                [523.25, 659.25, 783.99].forEach((freq, i) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(freq, now + i * 0.03);
+                    gain.gain.setValueAtTime(0.2, now + i * 0.03);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.03 + 0.25);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(now + i * 0.03);
+                    osc.stop(now + i * 0.03 + 0.25);
+                });
+            }
+            playWin() {
+                if (!this.enabled) return;
+                this.init();
+                const notes = [261.63, 329.63, 392.00, 523.25, 659.25, 783.99, 1046.50];
+                notes.forEach((freq, idx) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    const st = this.ctx.currentTime + idx * 0.09;
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(freq, st);
+                    gain.gain.setValueAtTime(0.25, st);
+                    gain.gain.exponentialRampToValueAtTime(0.001, st + 0.4);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(st);
+                    osc.stop(st + 0.45);
+                });
+            }
+        }
+
+        const sound = new SoundFX();
+
+        /* --- Image Presets (Procedural SVG Gradients & Art) --- */
+        const PRESETS = [
+            {
+                name: 'Неоновый Закат',
+                generate: () => {
+                    const c = document.createElement('canvas');
+                    c.width = 800; c.height = 800;
+                    const ctx = c.getContext('2d');
+                    const grad = ctx.createLinearGradient(0, 0, 800, 800);
+                    grad.addColorStop(0, '#0f0c29');
+                    grad.addColorStop(0.5, '#302b63');
+                    grad.addColorStop(1, '#24243e');
+                    ctx.fillStyle = grad;
+                    ctx.fillRect(0,0,800,800);
+
+                    // Sun
+                    const sunGrad = ctx.createRadialGradient(400, 420, 20, 400, 420, 250);
+                    sunGrad.addColorStop(0, '#ff007f');
+                    sunGrad.addColorStop(0.7, '#ffaa00');
+                    sunGrad.addColorStop(1, 'transparent');
+                    ctx.fillStyle = sunGrad;
+                    ctx.beginPath();
+                    ctx.arc(400, 420, 250, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Mountains
+                    ctx.fillStyle = '#110926';
+                    ctx.beginPath();
+                    ctx.moveTo(0, 800);
+                    ctx.lineTo(200, 500);
+                    ctx.lineTo(400, 650);
+                    ctx.lineTo(600, 450);
+                    ctx.lineTo(800, 800);
+                    ctx.closePath();
+                    ctx.fill();
+
+                    // Neon Grid Lines
+                    ctx.strokeStyle = 'rgba(0, 255, 255, 0.4)';
+                    ctx.lineWidth = 2;
+                    for (let y = 600; y <= 800; y += 25) {
+                        ctx.beginPath();
+                        ctx.moveTo(0, y);
+                        ctx.lineTo(800, y);
+                        ctx.stroke();
+                    }
+                    for (let x = -400; x <= 1200; x += 80) {
+                        ctx.beginPath();
+                        ctx.moveTo(x, 800);
+                        ctx.lineTo(400 + (x - 400) * 0.1, 580);
+                        ctx.stroke();
+                    }
+                    return c;
+                }
+            },
+            {
+                name: 'Изумрудный Лес',
+                generate: () => {
+                    const c = document.createElement('canvas');
+                    c.width = 800; c.height = 800;
+                    const ctx = c.getContext('2d');
+                    const grad = ctx.createLinearGradient(0, 0, 0, 800);
+                    grad.addColorStop(0, '#064e3b');
+                    grad.addColorStop(0.6, '#047857');
+                    grad.addColorStop(1, '#065f46');
+                    ctx.fillStyle = grad;
+                    ctx.fillRect(0,0,800,800);
+
+                    // Moonglow
+                    ctx.fillStyle = '#a7f3d0';
+                    ctx.beginPath();
+                    ctx.arc(400, 200, 80, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Cute Fireflies
+                    for (let i = 0; i < 40; i++) {
+                        const fx = (Math.sin(i * 99) * 0.5 + 0.5) * 800;
+                        const fy = (Math.cos(i * 33) * 0.5 + 0.5) * 800;
+                        ctx.fillStyle = 'rgba(254, 240, 138, 0.8)';
+                        ctx.beginPath();
+                        ctx.arc(fx, fy, (i % 4) + 2, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+
+                    // Tree silhouettes
+                    ctx.fillStyle = '#022c22';
+                    for (let i = 0; i < 9; i++) {
+                        const tx = i * 100;
+                        ctx.beginPath();
+                        ctx.moveTo(tx, 800);
+                        ctx.lineTo(tx + 50, 300 + (i % 3) * 60);
+                        ctx.lineTo(tx + 100, 800);
+                        ctx.fill();
+                    }
+                    return c;
+                }
+            },
+            {
+                name: 'Космический Кот',
+                generate: () => {
+                    const c = document.createElement('canvas');
+                    c.width = 800; c.height = 800;
+                    const ctx = c.getContext('2d');
+                    // Deep space
+                    ctx.fillStyle = '#090a16';
+                    ctx.fillRect(0, 0, 800, 800);
+
+                    // Nebula
+                    for (let i = 0; i < 5; i++) {
+                        const rg = ctx.createRadialGradient(200 + i*100, 200 + (i%2)*300, 30, 200 + i*100, 200 + (i%2)*300, 250);
+                        rg.addColorStop(0, i % 2 === 0 ? 'rgba(236,72,153,0.4)' : 'rgba(99,102,241,0.4)');
+                        rg.addColorStop(1, 'transparent');
+                        ctx.fillStyle = rg;
+                        ctx.fillRect(0,0,800,800);
+                    }
+
+                    // Cute Cat Face Silhouette
+                    ctx.fillStyle = '#ffffff';
+                    // Ears
+                    ctx.beginPath();
+                    ctx.moveTo(280, 320); ctx.lineTo(240, 180); ctx.lineTo(360, 260); ctx.fill();
+                    ctx.beginPath();
+                    ctx.moveTo(520, 320); ctx.lineTo(560, 180); ctx.lineTo(440, 260); ctx.fill();
+                    // Head
+                    ctx.beginPath();
+                    ctx.arc(400, 380, 140, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Eyes
+                    ctx.fillStyle = '#38bdf8';
+                    ctx.beginPath(); ctx.ellipse(350, 360, 24, 34, 0, 0, Math.PI * 2); ctx.fill();
+                    ctx.beginPath(); ctx.ellipse(450, 360, 24, 34, 0, 0, Math.PI * 2); ctx.fill();
+                    ctx.fillStyle = '#0f172a';
+                    ctx.beginPath(); ctx.arc(350, 360, 14, 0, Math.PI * 2); ctx.fill();
+                    ctx.beginPath(); ctx.arc(450, 360, 14, 0, Math.PI * 2); ctx.fill();
+
+                    // Cute Nose
+                    ctx.fillStyle = '#f472b6';
+                    ctx.beginPath();
+                    ctx.moveTo(390, 410); ctx.lineTo(410, 410); ctx.lineTo(400, 425); ctx.fill();
+
+                    // Whiskers
+                    ctx.strokeStyle = '#ffffff';
+                    ctx.lineWidth = 3;
+                    ctx.beginPath();
+                    ctx.moveTo(310, 410); ctx.lineTo(220, 390);
+                    ctx.moveTo(310, 425); ctx.lineTo(210, 430);
+                    ctx.moveTo(490, 410); ctx.lineTo(580, 390);
+                    ctx.moveTo(490, 425); ctx.lineTo(590, 430);
+                    ctx.stroke();
+
+                    return c;
+                }
+            },
+            {
+                name: 'Абстрактные Волны',
+                generate: () => {
+                    const c = document.createElement('canvas');
+                    c.width = 800; c.height = 800;
+                    const ctx = c.getContext('2d');
+                    ctx.fillStyle = '#18181b';
+                    ctx.fillRect(0, 0, 800, 800);
+
+                    const colors = ['#f43f5e', '#fb923c', '#facc15', '#4ade80', '#22d3ee', '#818cf8', '#c084fc'];
+                    for (let i = 0; i < 7; i++) {
+                        ctx.fillStyle = colors[i];
+                        ctx.beginPath();
+                        ctx.arc(400 + Math.sin(i) * 150, 400 + Math.cos(i) * 150, 180 - i * 18, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                    return c;
+                }
+            }
+        ];
+
+        /* --- Jigsaw Puzzle Logic --- */
+        class PuzzleGame {
+            constructor() {
+                this.canvas = document.getElementById('gameCanvas');
+                this.ctx = this.canvas.getContext('2d');
+
+                this.gridSize = 3; // 3x3 default
+                this.activePresetIdx = 0;
+                this.sourceImage = null;
+
+                this.pieces = [];
+                this.dragPiece = null;
+                this.dragOffset = { x: 0, y: 0 };
+
+                this.boardRect = { x: 0, y: 0, width: 0, height: 0 };
+                this.trayRect = { x: 0, y: 0, width: 0, height: 0 };
+
+                this.moves = 0;
+                this.startTime = null;
+                this.timerInterval = null;
+                this.isSolved = false;
+                this.showHint = false;
+
+                // Particle confetti
+                this.particles = [];
+
+                this.initEvents();
+                this.initPresetUI();
+                this.loadImageFromPreset(0);
+            }
+
+            initPresetUI() {
+                const container = document.getElementById('presetsContainer');
+                container.innerHTML = '';
+                PRESETS.forEach((preset, idx) => {
+                    const previewCanvas = preset.generate();
+                    const card = document.createElement('div');
+                    card.className = `cursor-pointer rounded-2xl overflow-hidden border-2 transition p-1.5 bg-slate-800/60 ${idx === this.activePresetIdx ? 'border-pink-500 scale-[1.02]' : 'border-white/10 hover:border-white/30'}`;
+                    card.innerHTML = `
+                        <img src="${previewCanvas.toDataURL()}" class="w-full h-24 object-cover rounded-xl mb-1.5" />
+                        <span class="block text-xs font-semibold text-center text-slate-200">${preset.name}</span>
+                    `;
+                    card.onclick = () => {
+                        this.activePresetIdx = idx;
+                        this.loadImageFromPreset(idx);
+                        this.initPresetUI();
+                        document.getElementById('modalSettings').classList.add('opacity-0', 'pointer-events-none');
+                    };
+                    container.appendChild(card);
+                });
+            }
+
+            loadImageFromPreset(idx) {
+                const canvasSource = PRESETS[idx].generate();
+                const img = new Image();
+                img.onload = () => {
+                    this.sourceImage = img;
+                    this.resetGame();
+                };
+                img.src = canvasSource.toDataURL();
+            }
+
+            loadCustomImage(file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        this.sourceImage = img;
+                        this.resetGame();
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+
+            resize() {
+                const dpr = window.devicePixelRatio || 1;
+                const rect = this.canvas.parentElement.getBoundingClientRect();
+                this.canvas.width = rect.width * dpr;
+                this.canvas.height = rect.height * dpr;
+                this.ctx.resetTransform();
+                this.ctx.scale(dpr, dpr);
+
+                const w = rect.width;
+                const h = rect.height;
+                const isMobile = w < 768;
+
+                // Layout Board vs Pieces Area
+                if (isMobile) {
+                    // Top: Board, Bottom: Scattered/Tray area
+                    const size = Math.min(w * 0.85, h * 0.44);
+                    this.boardRect = {
+                        x: (w - size) / 2,
+                        y: 20,
+                        width: size,
+                        height: size
+                    };
+                    this.trayRect = {
+                        x: 10,
+                        y: this.boardRect.y + size + 20,
+                        width: w - 20,
+                        height: h - (this.boardRect.y + size + 80)
+                    };
+                } else {
+                    // Left: Board, Right: Pieces Area
+                    const size = Math.min(w * 0.48, h * 0.78);
+                    this.boardRect = {
+                        x: 40,
+                        y: (h - size) / 2 - 10,
+                        width: size,
+                        height: size
+                    };
+                    this.trayRect = {
+                        x: this.boardRect.x + size + 30,
+                        y: this.boardRect.y,
+                        width: w - (this.boardRect.x + size + 70),
+                        height: size
+                    };
+                }
+
+                this.recalculatePieceScales();
+            }
+
+            resetGame() {
+                this.moves = 0;
+                this.isSolved = false;
+                this.particles = [];
+                document.getElementById('movesText').innerText = '0';
+                document.getElementById('progressText').innerText = `0/${this.gridSize * this.gridSize}`;
+                
+                clearInterval(this.timerInterval);
+                this.startTime = Date.now();
+                this.timerInterval = setInterval(() => this.updateTimer(), 1000);
+                this.updateTimer();
+
+                this.resize();
+                this.generatePieces();
+                this.scatterPieces();
+            }
+
+            updateTimer() {
+                if (this.isSolved) return;
+                const elapsedSec = Math.floor((Date.now() - this.startTime) / 1000);
+                const m = String(Math.floor(elapsedSec / 60)).padStart(2, '0');
+                const s = String(elapsedSec % 60).padStart(2, '0');
+                document.getElementById('timerText').innerText = `${m}:${s}`;
+            }
+
+            generatePieces() {
+                this.pieces = [];
+                const rows = this.gridSize;
+                const cols = this.gridSize;
+
+                // Edges representation: 1 = tab, -1 = blank, 0 = border flat
+                // horizontal edges: rows x (cols-1)
+                // vertical edges: (rows-1) x cols
+                const hEdges = Array.from({ length: rows }, () => Array(cols - 1).fill(0));
+                const vEdges = Array.from({ length: rows - 1 }, () => Array(cols).fill(0));
+
+                for (let r = 0; r < rows; r++) {
+                    for (let c = 0; c < cols - 1; c++) {
+                        hEdges[r][c] = Math.random() < 0.5 ? 1 : -1;
+                    }
+                }
+                for (let r = 0; r < rows - 1; r++) {
+                    for (let c = 0; c < cols; c++) {
+                        vEdges[r][c] = Math.random() < 0.5 ? 1 : -1;
+                    }
+                }
+
+                for (let r = 0; r < rows; r++) {
+                    for (let c = 0; c < cols; c++) {
+                        const edges = {
+                            top: r === 0 ? 0 : -vEdges[r - 1][c],
+                            right: c === cols - 1 ? 0 : hEdges[r][c],
+                            bottom: r === rows - 1 ? 0 : vEdges[r][c],
+                            left: c === 0 ? 0 : -hEdges[r][c - 1]
+                        };
+
+                        this.pieces.push({
+                            row: r,
+                            col: c,
+                            edges: edges,
+                            x: 0,
+                            y: 0,
+                            targetX: 0,
+                            targetY: 0,
+                            isLocked: false,
+                            animScale: 1
+                        });
+                    }
+                }
+            }
+
+            recalculatePieceScales() {
+                if (!this.pieces.length) return;
+                const pieceW = this.boardRect.width / this.gridSize;
+                const pieceH = this.boardRect.height / this.gridSize;
+
+                this.pieces.forEach(p => {
+                    p.targetX = this.boardRect.x + p.col * pieceW;
+                    p.targetY = this.boardRect.y + p.row * pieceH;
+                    p.width = pieceW;
+                    p.height = pieceH;
+                    if (p.isLocked) {
+                        p.x = p.targetX;
+                        p.y = p.targetY;
+                    }
+                });
+            }
+
+            scatterPieces() {
+                const pieceW = this.boardRect.width / this.gridSize;
+                const pieceH = this.boardRect.height / this.gridSize;
+
+                this.pieces.forEach((p, idx) => {
+                    p.width = pieceW;
+                    p.height = pieceH;
+                    p.targetX = this.boardRect.x + p.col * pieceW;
+                    p.targetY = this.boardRect.y + p.row * pieceH;
+                    p.isLocked = false;
+
+                    // Scatter nicely in Tray rect with margin
+                    const margin = 10;
+                    const minX = this.trayRect.x + margin;
+                    const maxX = Math.max(minX, this.trayRect.x + this.trayRect.width - pieceW - margin);
+                    const minY = this.trayRect.y + margin;
+                    const maxY = Math.max(minY, this.trayRect.y + this.trayRect.height - pieceH - margin);
+
+                    p.x = minX + Math.random() * (maxX - minX);
+                    p.y = minY + Math.random() * (maxY - minY);
+                });
+            }
+
+            drawPiecePath(ctx, x, y, w, h, edges) {
+                const tabW = w * 0.22;
+                const tabH = h * 0.22;
+
+                ctx.beginPath();
+                ctx.moveTo(x, y);
+
+                // Top Edge
+                if (edges.top === 0) {
+                    ctx.lineTo(x + w, y);
+                } else {
+                    const dir = edges.top; // 1 = outward, -1 = inward
+                    const midX = x + w / 2;
+                    ctx.lineTo(midX - tabW, y);
+                    ctx.bezierCurveTo(
+                        midX - tabW, y - tabH * dir,
+                        midX + tabW, y - tabH * dir,
+                        midX + tabW, y
+                    );
+                    ctx.lineTo(x + w, y);
+                }
+
+                // Right Edge
+                if (edges.right === 0) {
+                    ctx.lineTo(x + w, y + h);
+                } else {
+                    const dir = edges.right;
+                    const midY = y + h / 2;
+                    ctx.lineTo(x + w, midY - tabH);
+                    ctx.bezierCurveTo(
+                        x + w + tabW * dir, midY - tabH,
+                        x + w + tabW * dir, midY + tabH,
+                        x + w, midY + tabH
+                    );
+                    ctx.lineTo(x + w, y + h);
+                }
+
+                // Bottom Edge
+                if (edges.bottom === 0) {
+                    ctx.lineTo(x, y + h);
+                } else {
+                    const dir = edges.bottom;
+                    const midX = x + w / 2;
+                    ctx.lineTo(midX + tabW, y + h);
+                    ctx.bezierCurveTo(
+                        midX + tabW, y + h + tabH * dir,
+                        midX - tabW, y + h + tabH * dir,
+                        midX - tabW, y + h
+                    );
+                    ctx.lineTo(x, y + h);
+                }
+
+                // Left Edge
+                if (edges.left === 0) {
+                    ctx.closePath();
+                } else {
+                    const dir = edges.left;
+                    const midY = y + h / 2;
+                    ctx.lineTo(x, midY + tabH);
+                    ctx.bezierCurveTo(
+                        x - tabW * dir, midY + tabH,
+                        x - tabW * dir, midY - tabH,
+                        x, midY - tabH
+                    );
+                    ctx.closePath();
+                }
+            }
+
+            render() {
+                const rect = this.canvas.parentElement.getBoundingClientRect();
+                this.ctx.clearRect(0, 0, rect.width, rect.height);
+
+                // Draw Target Board Frame
+                this.ctx.save();
+                this.ctx.fillStyle = 'rgba(15, 23, 42, 0.6)';
+                this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+                this.ctx.lineWidth = 3;
+                this.ctx.roundRect(this.boardRect.x - 6, this.boardRect.y - 6, this.boardRect.width + 12, this.boardRect.height + 12, 16);
+                this.ctx.fill();
+                this.ctx.stroke();
+
+                // Ghost Preview / Hint
+                if (this.showHint && this.sourceImage) {
+                    this.ctx.save();
+                    this.ctx.globalAlpha = 0.28;
+                    this.ctx.drawImage(this.sourceImage, this.boardRect.x, this.boardRect.y, this.boardRect.width, this.boardRect.height);
+                    this.ctx.restore();
+                }
+
+                // Grid Lines inside board
+                this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+                this.ctx.lineWidth = 1;
+                const pW = this.boardRect.width / this.gridSize;
+                const pH = this.boardRect.height / this.gridSize;
+                for (let i = 1; i < this.gridSize; i++) {
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(this.boardRect.x + i * pW, this.boardRect.y);
+                    this.ctx.lineTo(this.boardRect.x + i * pW, this.boardRect.y + this.boardRect.height);
+                    this.ctx.stroke();
+
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(this.boardRect.x, this.boardRect.y + i * pH);
+                    this.ctx.lineTo(this.boardRect.x + this.boardRect.width, this.boardRect.y + i * pH);
+                    this.ctx.stroke();
+                }
+
+                // Draw Tray Area Boundary
+                this.ctx.fillStyle = 'rgba(30, 41, 59, 0.2)';
+                this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+                this.ctx.lineWidth = 1;
+                this.ctx.roundRect(this.trayRect.x, this.trayRect.y, this.trayRect.width, this.trayRect.height, 20);
+                this.ctx.fill();
+                this.ctx.stroke();
+                this.ctx.restore();
+
+                // Draw Pieces
+                // 1. Locked pieces first
+                // 2. Unlocked idle pieces
+                // 3. Dragged piece on top
+                const lockedPieces = this.pieces.filter(p => p.isLocked);
+                const freePieces = this.pieces.filter(p => !p.isLocked && p !== this.dragPiece);
+                const activePiece = this.dragPiece;
+
+                lockedPieces.forEach(p => this.drawPiece(p));
+                freePieces.forEach(p => this.drawPiece(p));
+                if (activePiece) {
+                    this.drawPiece(activePiece, true);
+                }
+
+                // Render confetti
+                this.renderParticles();
+
+                requestAnimationFrame(() => this.render());
+            }
+
+            drawPiece(piece, isHeld = false) {
+                if (!this.sourceImage) return;
+                const ctx = this.ctx;
+                const { x, y, width: w, height: h, edges, row, col } = piece;
+
+                ctx.save();
+
+                // Elevation Drop Shadow
+                if (isHeld) {
+                    ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+                    ctx.shadowBlur = 24;
+                    ctx.shadowOffsetX = 6;
+                    ctx.shadowOffsetY = 12;
+                } else if (!piece.isLocked) {
+                    ctx.shadowColor = 'rgba(0, 0, 0, 0.25)';
+                    ctx.shadowBlur = 8;
+                    ctx.shadowOffsetX = 2;
+                    ctx.shadowOffsetY = 4;
+                }
+
+                this.drawPiecePath(ctx, x, y, w, h, edges);
+
+                ctx.save();
+                ctx.clip();
+
+                // Source Image mapping
+                const imgPieceW = this.sourceImage.width / this.gridSize;
+                const imgPieceH = this.sourceImage.height / this.gridSize;
+                const sx = col * imgPieceW;
+                const sy = row * imgPieceH;
+                const tabPaddingFactor = 0.35; // margin to accommodate tabs
+                
+                ctx.drawImage(
+                    this.sourceImage,
+                    sx - imgPieceW * tabPaddingFactor,
+                    sy - imgPieceH * tabPaddingFactor,
+                    imgPieceW * (1 + tabPaddingFactor * 2),
+                    imgPieceH * (1 + tabPaddingFactor * 2),
+                    x - w * tabPaddingFactor,
+                    y - h * tabPaddingFactor,
+                    w * (1 + tabPaddingFactor * 2),
+                    h * (1 + tabPaddingFactor * 2)
+                );
+
+                ctx.restore();
+
+                // Stroke highlight & puzzle interlock outline
+                ctx.strokeStyle = piece.isLocked 
+                    ? 'rgba(255, 255, 255, 0.12)' 
+                    : isHeld ? '#ec4899' : 'rgba(255, 255, 255, 0.4)';
+                ctx.lineWidth = isHeld ? 2.5 : 1.5;
+                ctx.stroke();
+
+                ctx.restore();
+            }
+
+            spawnConfetti() {
+                for (let i = 0; i < 80; i++) {
+                    this.particles.push({
+                        x: this.boardRect.x + this.boardRect.width / 2,
+                        y: this.boardRect.y + this.boardRect.height / 2,
+                        vx: (Math.random() - 0.5) * 14,
+                        vy: (Math.random() - 0.8) * 16,
+                        size: Math.random() * 8 + 4,
+                        color: ['#ec4899', '#6366f1', '#38bdf8', '#fbbf24', '#34d399'][Math.floor(Math.random() * 5)],
+                        rot: Math.random() * 360,
+                        vRot: (Math.random() - 0.5) * 10,
+                        life: 1
+                    });
+                }
+            }
+
+            renderParticles() {
+                for (let i = this.particles.length - 1; i >= 0; i--) {
+                    const p = this.particles[i];
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.vy += 0.4; // gravity
+                    p.rot += p.vRot;
+                    p.life -= 0.012;
+
+                    if (p.life <= 0) {
+                        this.particles.splice(i, 1);
+                        continue;
+                    }
+
+                    this.ctx.save();
+                    this.ctx.globalAlpha = p.life;
+                    this.ctx.translate(p.x, p.y);
+                    this.ctx.rotate((p.rot * Math.PI) / 180);
+                    this.ctx.fillStyle = p.color;
+                    this.ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+                    this.ctx.restore();
+                }
+            }
+
+            checkWinCondition() {
+                const allLocked = this.pieces.every(p => p.isLocked);
+                const lockedCount = this.pieces.filter(p => p.isLocked).length;
+                document.getElementById('progressText').innerText = `${lockedCount}/${this.pieces.length}`;
+
+                if (allLocked && !this.isSolved) {
+                    this.isSolved = true;
+                    clearInterval(this.timerInterval);
+                    sound.playWin();
+                    this.spawnConfetti();
+
+                    setTimeout(() => {
+                        const elapsedSec = Math.floor((Date.now() - this.startTime) / 1000);
+                        const m = String(Math.floor(elapsedSec / 60)).padStart(2, '0');
+                        const s = String(elapsedSec % 60).padStart(2, '0');
+                        document.getElementById('winTime').innerText = `${m}:${s}`;
+                        document.getElementById('winMoves').innerText = this.moves;
+
+                        const modal = document.getElementById('modalWin');
+                        modal.classList.remove('opacity-0', 'pointer-events-none');
+                        document.getElementById('winCard').classList.remove('scale-90');
+                        document.getElementById('winCard').classList.add('scale-100');
+                    }, 500);
+                }
+            }
+
+            initEvents() {
+                window.addEventListener('resize', () => this.resize());
+
+                const getCanvasCoords = (e) => {
+                    const rect = this.canvas.getBoundingClientRect();
+                    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                    return {
+                        x: clientX - rect.left,
+                        y: clientY - rect.top
+                    };
+                };
+
+                const onPointerDown = (e) => {
+                    if (this.isSolved) return;
+                    const pos = getCanvasCoords(e);
+
+                    // Search topmost piece hit
+                    for (let i = this.pieces.length - 1; i >= 0; i--) {
+                        const p = this.pieces[i];
+                        if (p.isLocked) continue;
+
+                        // Check if within bounds
+                        if (pos.x >= p.x && pos.x <= p.x + p.width &&
+                            pos.y >= p.y && pos.y <= p.y + p.height) {
+                            
+                            this.dragPiece = p;
+                            this.dragOffset.x = pos.x - p.x;
+                            this.dragOffset.y = pos.y - p.y;
+                            
+                            // Reorder piece to top of list
+                            this.pieces.splice(i, 1);
+                            this.pieces.push(p);
+                            
+                            sound.playPick();
+                            break;
+                        }
+                    }
+                };
+
+                const onPointerMove = (e) => {
+                    if (!this.dragPiece) return;
+                    const pos = getCanvasCoords(e);
+                    this.dragPiece.x = pos.x - this.dragOffset.x;
+                    this.dragPiece.y = pos.y - this.dragOffset.y;
+                };
+
+                const onPointerUp = () => {
+                    if (!this.dragPiece) return;
+                    const p = this.dragPiece;
+                    this.dragPiece = null;
+                    this.moves++;
+                    document.getElementById('movesText').innerText = this.moves;
+
+                    // Check snap distance threshold
+                    const snapDistance = Math.min(p.width, p.height) * 0.45;
+                    const dx = Math.abs(p.x - p.targetX);
+                    const dy = Math.abs(p.y - p.targetY);
+
+                    if (dx < snapDistance && dy < snapDistance) {
+                        p.x = p.targetX;
+                        p.y = p.targetY;
+                        p.isLocked = true;
+                        sound.playSnap();
+                        this.checkWinCondition();
+                    }
+                };
+
+                this.canvas.addEventListener('mousedown', onPointerDown);
+                window.addEventListener('mousemove', onPointerMove);
+                window.addEventListener('mouseup', onPointerUp);
+
+                this.canvas.addEventListener('touchstart', (e) => { e.preventDefault(); onPointerDown(e); }, { passive: false });
+                window.addEventListener('touchmove', (e) => { onPointerMove(e); }, { passive: false });
+                window.addEventListener('touchend', onPointerUp);
+
+                // Quick Action Bar & Difficulty Buttons
+                document.querySelectorAll('.btn-diff').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        document.querySelectorAll('.btn-diff').forEach(b => {
+                            b.classList.remove('bg-indigo-600', 'text-white');
+                            b.classList.add('text-indigo-200');
+                        });
+                        btn.classList.add('bg-indigo-600', 'text-white');
+                        btn.classList.remove('text-indigo-200');
+
+                        this.gridSize = parseInt(btn.getAttribute('data-grid'));
+                        this.resetGame();
+                    });
+                });
+
+                document.getElementById('btnRestart').onclick = () => this.scatterPieces();
+
+                // Hint Toggle
+                document.getElementById('btnHint').onclick = () => {
+                    this.showHint = !this.showHint;
+                    document.getElementById('btnHint').classList.toggle('text-pink-400', this.showHint);
+                };
+
+                // Sound Toggle
+                document.getElementById('btnSound').onclick = () => {
+                    sound.enabled = !sound.enabled;
+                    document.getElementById('soundIconOn').classList.toggle('hidden', !sound.enabled);
+                    document.getElementById('soundIconOff').classList.toggle('hidden', sound.enabled);
+                };
+
+                // Modals
+                const modalSettings = document.getElementById('modalSettings');
+                document.getElementById('btnSettings').onclick = () => {
+                    modalSettings.classList.remove('opacity-0', 'pointer-events-none');
+                };
+                document.getElementById('btnCloseSettings').onclick = () => {
+                    modalSettings.classList.add('opacity-0', 'pointer-events-none');
+                };
+                document.getElementById('btnStartGameModal').onclick = () => {
+                    modalSettings.classList.add('opacity-0', 'pointer-events-none');
+                };
+
+                // File Upload
+                document.getElementById('fileInput').addEventListener('change', (e) => {
+                    if (e.target.files && e.target.files[0]) {
+                        this.loadCustomImage(e.target.files[0]);
+                        modalSettings.classList.add('opacity-0', 'pointer-events-none');
+                    }
+                });
+
+                // Win Modal Actions
+                document.getElementById('btnWinReplay').onclick = () => {
+                    document.getElementById('modalWin').classList.add('opacity-0', 'pointer-events-none');
+                    this.resetGame();
+                };
+                document.getElementById('btnWinNext').onclick = () => {
+                    document.getElementById('modalWin').classList.add('opacity-0', 'pointer-events-none');
+                    this.activePresetIdx = (this.activePresetIdx + 1) % PRESETS.length;
+                    this.loadImageFromPreset(this.activePresetIdx);
+                    this.initPresetUI();
+                };
+
+                // Start animation loop
+                requestAnimationFrame(() => this.render());
+            }
+        }
+
+        // Initialize Game
+        window.addEventListener('DOMContentLoaded', () => {
+            window.puzzleGame = new PuzzleGame();
+        });
+    </script>
+</body>
+</html>
